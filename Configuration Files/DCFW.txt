@@ -1,0 +1,57 @@
+tuto : https://youtu.be/5bFLMQU2zxI
+sudo service tftpd-hpa start 
+TFTP server folder location in My-PC: /var/lib/tftpboot
+ASDM version: asdm-731-101.bin
+
+en
+
+conf t
+
+hostname DCFW
+
+int Management 0/0
+no sh 
+nameif Management
+security-level 100
+ip address 192.168.122.101 255.255.255.0
+exit
+
+copy tftp: disk0:
+192.168.122.1
+asdm-731-101.bin
+
+
+http server enable
+http 192.168.122.0 255.255.255.0 Management
+asdm image flash:asdm-731-101.bin
+
+username admin password cisco
+
+exit
+
+copy running-config startup-config
+
+OPEN ASDM: 
+tuto: https://youtu.be/hH9z3Hn56cw
+./ASDM 192.168.122.101
+
+------------------------- ASDM config------------------------ 
+* Device Setup ->Interfaces:
+1- ADD interfaces(VLAN,shutdown,nameif,ip add, security-level):
+	-Giga 0/5 (-,no, DC-OUTSIDE, 10.117.99.1/30, 0)
+	-Giga 0/1 (-,no,no nameif, no ip add, no sec)
+	-Giga 0/1.1(1,-,DC-INSIDE-VLAN001,10.117.100.254/24,100)
+	-Giga 0/1.101(101,-,DC-INSIDE-VLAN101,10.117.101.254/24,100)
+	-Giga 0/1.102(102,-,DC-INSIDE-VLAN102,10.117.102.254/24,100)
+2- Enable traffic between (interfaces and hosts)
+* Device Setup -> Routing-> Static Routes:
+ADD route: 
+	- Interface: DC-OUTSIDE
+	- Network: any4
+	- Gateway IP: 10.117.99.2
+	- Metric : 1
+* Firewall -> Access Rules:
+DC-OUTSIDE: add: permit service ip any, any
+* Firewall -> Service Policy Rules:
+Gloabl_policy: ADD Rule Actions: ICMP, ICMP Error
+

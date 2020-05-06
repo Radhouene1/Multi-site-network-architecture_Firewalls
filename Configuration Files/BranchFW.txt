@@ -1,0 +1,85 @@
+tuto : https://youtu.be/5bFLMQU2zxI
+sudo service tftpd-hpa start 
+TFTP server folder location in My-PC: /var/lib/tftpboot
+ASDM version: asdm-731-101.bin
+
+en
+
+conf t
+
+hostname BranchFW
+
+int Management 0/0
+no sh 
+nameif Management
+security-level 100
+ip address 192.168.122.104 255.255.255.0
+exit
+
+copy tftp: disk0:
+192.168.122.1
+asdm-731-101.bin
+
+
+http server enable
+http 192.168.122.0 255.255.255.0 Management
+asdm image flash:asdm-731-101.bin
+
+username admin password cisco
+
+exit
+
+copy running-config startup-config
+
+OPEN ASDM: 
+tuto: https://youtu.be/hH9z3Hn56cw
+./ASDM 192.168.122.104
+
+------------------------- ASDM config------------------------ 
+* Device Setup ->Interfaces:
+1- ADD interfaces(VLAN,shutdown,nameif,ip add, security-level):
+	-Giga 0/0 (-,no, Branch-OUTSIDE, 4.4.4.2/30, 0)
+	-Giga 0/1 (-,no, Branch-INSIDE, 10.119.99.1/30, 100)
+2- Enable traffic between (interfaces and hosts)
+
+* Device Setup -> Routing-> Static Routes:
+ADD route: 
+	- Interface: Branch-OUTSIDE
+	- Network: any4
+	- Gateway IP: 4.4.4.1
+	- Metric : 1
+	--------------------------
+	- Interface: Branch-INSIDE
+	- Network: 10.119.0.0
+	- Gateway IP: 10.119.99.2
+	- Metric : 1
+
+* Firewall -> Access Rules:
+Branch-OUTSIDE: add: permit service ip any, any
+* Firewall -> Service Policy Rules:
+Gloabl_policy: ADD Rule Actions: ICMP, ICMP Error
+
+---------------------- Branch VPN --------------------------
+
+* Wizards -> VPN Wizards -> Site to Site VPN Wizard: 
+1- Introduction: Click next
+2- Peer Device Identification:
+	- Peer IP Address : 3.3.3.2
+	- VPN Access Interface: Branch-OUTSIDE
+3- Traffic to protect:
+	- Local Network: Branch_Network (10.119.0.0/16)
+	- Remote Network: EDGE-Network (10.115.1.0/24)
+
+4- Security:
+	+ Simple configuration: Pre-shared key: cisco@123
+
+5- NAT Exempt: 
+	- Exempt ASA side host/network from address translation: Branch-INSIDE
+
+
+
+
+
+
+
+

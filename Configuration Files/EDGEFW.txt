@@ -1,0 +1,127 @@
+tuto : https://youtu.be/5bFLMQU2zxI
+sudo service tftpd-hpa start 
+TFTP server folder location in My-PC: /var/lib/tftpboot
+ASDM version: asdm-731-101.bin
+
+en
+
+conf t
+
+
+hostname EDGEFW
+
+int Management 0/0
+no sh 
+nameif Management
+security-level 100
+ip address 192.168.122.102 255.255.255.0
+exit
+
+copy tftp: disk0:
+192.168.122.1
+asdm-731-101.bin
+
+
+http server enable
+http 192.168.122.0 255.255.255.0 Management
+asdm image flash:asdm-731-101.bin
+
+username admin password cisco
+
+exit
+
+copy running-config startup-config
+
+OPEN ASDM: 
+tuto: https://youtu.be/hH9z3Hn56cw
+./ASDM 192.168.122.102
+
+------------------------- ASDM config------------------------ 
+* Device Setup ->Interfaces:
+1- ADD interfaces(VLAN,shutdown,nameif,ip add, security-level):
+	-Giga 0/1 (-,no, EDGE-INSIDE, 10.115.1.3/24, 100)
+	-Giga 0/5 (-,no, EDGE-OUTSIDE-BACK-UP, 1.1.1.2/30, 0)
+	-Giga 0/6 (-,no, EDGE-OUTSIDE-BRANCH, 3.3.3.2/30, 0)
+2- Enable traffic between (interfaces and hosts)
+
+* Device Setup -> Routing-> Static Routes:
+NB: Add networks before adding routes
+ADD route: 
+	- Interface: EDGE-OUTSIDE-BACK-UP
+	- Network: 2.2.2.0
+	- Gateway IP: 1.1.1.1
+	- Metric : 1
+	-----------------------
+	- Interface: EDGE-OUTSIDE-BACK-UP
+	- Network: 10.118.0.0
+	- Gateway IP: 1.1.1.1
+	- Metric : 1
+	-----------------------
+	- Interface: EDGE-OUTSIDE-BRANCH
+	- Network: 4.4.4.0
+	- Gateway IP: 3.3.3.1
+	- Metric : 1
+	-----------------------
+	- Interface: EDGE-OUTSIDE-BRANCH
+	- Network: 10.119.0.0
+	- Gateway IP: 3.3.3.1
+	- Metric : 1
+	-----------------------
+ 	- Interface: EDGE-INSIDE
+	- Network: 10.116.0.0
+	- Gateway IP: 10.115.1.6
+	- Metric : 1
+	-----------------------
+ 	- Interface: EDGE-INSIDE
+	- Network: 10.117.0.0
+	- Gateway IP: 10.115.1.6
+	- Metric : 1
+	-----------------------
+* Firewall -> Access Rules:
+EDGE-OUTSIDE-BACK-UP: add: permit service ip any, any
+EDGE-OUTSIDE-BRANCH:  add: permit service ip any, any
+* Firewall -> Service Policy Rules:
+Gloabl_policy: ADD Rule Actions: ICMP, ICMP Error
+
+---------------------- BACK-UP VPN --------------------------
+* Wizards -> VPN Wizards -> Site to Site VPN Wizard: 
+1- Introduction: Click next
+2- Peer Device Identification:
+	- Peer IP Address : 2.2.2.2
+	- VPN Access Interface: EDGE-OUTSIDE-BACK-UP
+3- Traffic to protect:
+	- Local Network: EDGE-Network (10.115.1.0/24)
+	- Remote Network: Back-up_Network (10.118.0.0/16)
+
+4- Security:
+	+ Simple configuration: Pre-shared key: cisco@123
+
+5- NAT Exempt: 
+	- Exempt ASA side host/network from address translation: EDGE-INSIDE
+
+
+---------------------- Branch VPN --------------------------
+
+* Wizards -> VPN Wizards -> Site to Site VPN Wizard: 
+1- Introduction: Click next
+2- Peer Device Identification:
+	- Peer IP Address : 4.4.4.2
+	- VPN Access Interface: EDGE-OUTSIDE-BRANCH
+3- Traffic to protect:
+	- Local Network: EDGE-Network (10.115.1.0/24)
+	- Remote Network: Branch_Network (10.119.0.0/16)
+
+4- Security:
+	+ Simple configuration: Pre-shared key: cisco@123
+
+5- NAT Exempt: 
+	- Exempt ASA side host/network from address translation: EDGE-INSIDE
+
+
+
+
+
+
+
+
+
